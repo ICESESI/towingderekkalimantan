@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -51,6 +49,26 @@
             font-weight: bold;
             margin-top: 10px;
         }
+        button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -64,16 +82,28 @@
     </div>
     
     <p class="congrats" id="congratsMessage"></p>
+    <p id="bestRecord"></p>
+
+    <button onclick="resetProgress()">Reset Perjalanan</button>
+    <button onclick="playMotivation()">Dengar Motivasi</button>
+    <audio id="motivationAudio" src="Ayatul_Kursi_Terjemahan_Rumi(256k).mp3"></audio>
 
     <p class="quote" id="quranVerse"></p>
     <p id="quranTafsir"></p>
+
+    <h3>Catatan Harian</h3>
+    <textarea id="dailyJournal" placeholder="Tulis perasaan dan pengalaman hari ini..."></textarea>
+    <button onclick="saveJournal()">Simpan</button>
+    <p id="journalMessage"></p>
 </div>
 
 <script>
-    const startDate = new Date("March 8, 2025"); // Tarikh mula
+    // Dapatkan tarikh reset jika ada
+    const resetDate = localStorage.getItem("resetDate");
+    const startDate = resetDate ? new Date(resetDate) : new Date("March 8, 2025");
     const today = new Date();
     const daysWithoutPMO = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-    
+
     document.getElementById("daysCount").innerText = daysWithoutPMO;
 
     // Update progress bar
@@ -81,6 +111,14 @@
     const percentage = Math.min((daysWithoutPMO / 365) * 100, 100);
     progressBar.style.width = percentage + "%";
     progressBar.innerText = Math.floor(percentage) + "%";
+
+    // Simpan rekod terbaik
+    let bestStreak = localStorage.getItem("bestStreak") || 0;
+    if (daysWithoutPMO > bestStreak) {
+        bestStreak = daysWithoutPMO;
+        localStorage.setItem("bestStreak", bestStreak);
+    }
+    document.getElementById("bestRecord").innerText = `Rekod Terbaik: ${bestStreak} hari`;
 
     // Tahniah mesej bila capai milestone
     const congratsMessage = document.getElementById("congratsMessage");
@@ -94,19 +132,42 @@
     const quranVerses = [
         { arab: "وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا", tafsir: "Dan orang yang bersungguh-sungguh berusaha pada jalan Kami, pasti Kami tunjukkan kepada mereka jalan Kami. (Al-Ankabut: 69)" },
         { arab: "إِنَّ اللَّهَ مَعَ الصَّابِرِينَ", tafsir: "Sesungguhnya Allah bersama orang-orang yang sabar. (Al-Baqarah: 153)" },
-        { arab: "إِنَّ النَّفْسَ لَأَمَّارَةٌ بِالسُّوءِ", tafsir: "Sesungguhnya nafsu itu sentiasa mengajak kepada kejahatan. (Yusuf: 53)" },
-        { arab: "وَلَا تَقْرَبُوا الزِّنَىٰ إِنَّهُ كَانَ فَاحِشَةً وَسَاءَ سَبِيلًا", tafsir: "Dan janganlah kamu mendekati zina. Sesungguhnya ia adalah perbuatan keji dan jalan yang buruk. (Al-Isra’: 32)" },
-        { arab: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا، إِنَّ مَعَ الْعُسْرِ يُسْرًا", tafsir: "Sesungguhnya bersama kesulitan ada kemudahan. (Al-Insyirah: 5-6)" },
-        { arab: "وَأَمَّا مَنْ خَافَ مَقَامَ رَبِّهِ وَنَهَى النَّفْسَ عَنِ الْهَوَىٰ فَإِنَّ الْجَنَّةَ هِيَ الْمَأْوَىٰ", tafsir: "Barang siapa takut kepada Tuhannya dan menahan diri dari hawa nafsu, maka syurgalah tempatnya. (An-Nazi'at: 40-41)" }
+        { arab: "إِنَّ النَّفْسَ لَأَمَّارَةٌ بِالسُّوءِ", tafsir: "Sesungguhnya nafsu itu sentiasa mengajak kepada kejahatan. (Yusuf: 53)" }
     ];
 
     // Pilih ayat secara random
     const randomIndex = Math.floor(Math.random() * quranVerses.length);
     document.getElementById("quranVerse").innerText = quranVerses[randomIndex].arab;
     document.getElementById("quranTafsir").innerText = quranVerses[randomIndex].tafsir;
+
+    // Kata-kata semangat
+    const messages = [
+        "Satu langkah kecil hari ini membawa perubahan besar esok.",
+        "Jangan putus asa, setiap usaha mendekatkan kamu kepada kejayaan.",
+        "Allah bersama mereka yang berusaha dan bersabar.",
+        "Setiap kali jatuh, bangun semula lebih kuat!"
+    ];
+    document.getElementById("congratsMessage").innerText += " | " + messages[Math.floor(Math.random() * messages.length)];
+
+    // Fungsi reset perjalanan
+    function resetProgress() {
+        localStorage.setItem("resetDate", new Date().toISOString());
+        location.reload();
+    }
+
+    // Fungsi mainkan audio motivasi
+    function playMotivation() {
+        document.getElementById("motivationAudio").play();
+    }
+
+    // Fungsi simpan catatan harian
+    function saveJournal() {
+        let journal = document.getElementById("dailyJournal").value;
+        localStorage.setItem("dailyJournal", journal);
+        document.getElementById("journalMessage").innerText = "Catatan disimpan!";
+    }
+    document.getElementById("dailyJournal").value = localStorage.getItem("dailyJournal") || "";
 </script>
 
 </body>
 </html>
-
-
